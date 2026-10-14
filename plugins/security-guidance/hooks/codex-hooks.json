@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {"hooks": [{"type": "command", "command": "bash \"${PLUGIN_ROOT}/hooks/sg-python.sh\" \"${PLUGIN_ROOT}/hooks/codex_hook.py\""}]}
+    ],
+    "PostToolUse": [
+      {"matcher": "Bash|apply_patch", "hooks": [{"type": "command", "command": "bash \"${PLUGIN_ROOT}/hooks/sg-python.sh\" \"${PLUGIN_ROOT}/hooks/codex_hook.py\"", "timeout": 180}]}
+    ],
+    "Stop": [
+      {"hooks": [{"type": "command", "command": "bash \"${PLUGIN_ROOT}/hooks/sg-python.sh\" \"${PLUGIN_ROOT}/hooks/codex_hook.py\"", "timeout": 180}]}
+    ]
+  }
+}

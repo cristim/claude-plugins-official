@@ -16,6 +16,37 @@ Findings cover common web-vulnerability classes — injection, XSS, SSRF, hardco
 
 Marketplace ships enabled by default in Claude Code — no setup beyond having the CLI itself.
 
+### Codex
+
+This fork includes a separate Codex manifest and hook adapter, tested with Codex
+0.162.1. In Codex, add the fork marketplace and install its dedicated plugin:
+
+```text
+codex plugin marketplace add https://github.com/cristim/claude-plugins-official --ref fix/codex-hooks
+codex plugin add security-guidance@codex-security-guidance
+```
+
+Approve the plugin's hook commands in Codex's hook trust UI, then restart the
+session. Disable any older Claude marketplace copy of security-guidance to avoid
+duplicate handlers. Preserve your Stop-hook preference; installing this version
+does not require enabling Stop reviews.
+
+Codex pattern checks scan added content in successful `apply_patch` operations,
+including multiple files and moved destinations. They need Python but no API
+credentials. Commit, push, and enabled Stop reviews require an Anthropic API key,
+auth token, or compatible HTTP gateway configured with the existing environment
+variables. Codex login alone does not supply these credentials. Reviews run
+synchronously and can delay tool completion. The Codex entrypoint never starts
+the tool-using agentic commit reviewer, even when `SG_AGENTIC_COMMIT_REVIEW=1`,
+and never installs SDK dependencies. Configured third-party single-shot reviews
+may still use the existing SDK and Claude CLI; those must already be installed.
+Claude Code's manifest, hooks, and behavior remain unchanged.
+
+Run the compatibility regressions and existing suite with `python -m pytest
+plugins/security-guidance/tests` from the repository root, using an environment
+with `pytest` and `claude-agent-sdk` installed for the original agentic tests.
+Tests use local stub API endpoints.
+
 ## Prerequisites
 
 - Claude Code CLI ≥ v2.1.144

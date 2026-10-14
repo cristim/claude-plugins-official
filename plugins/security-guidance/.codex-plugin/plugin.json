@@ -1,0 +1,6 @@
+{
+  "name": "security-guidance",
+  "version": "2.0.13-codex.1",
+  "description": "Security pattern warnings and configured-provider commit, push, and Stop review for Codex.",
+  "hooks": "./hooks/codex-hooks.json"
+}

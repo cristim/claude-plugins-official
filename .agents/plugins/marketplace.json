@@ -1,0 +1,7 @@
+{
+  "name": "codex-security-guidance",
+  "owner": {"name": "Codex Security Guidance"},
+  "plugins": [
+    {"name": "security-guidance", "source": "./plugins/security-guidance"}
+  ]
+}
