@@ -30,7 +30,7 @@ def invoke(payload, env):
     return result.returncode, output, result.stderr
 
 
-def patch_payload(cwd, patch, response="Success. Updated the following files:"):
+def patch_payload(cwd, patch, response="Exit code: 0\nWall time: 0 seconds\nOutput:\nSuccess. Updated the following files:\nA sample.py\n"):
     return {"session_id": "patch", "cwd": str(cwd),
             "hook_event_name": "PostToolUse", "tool_name": "apply_patch",
             "tool_input": {"command": patch}, "tool_response": response}
@@ -90,7 +90,11 @@ def test_stop_findings_preserve_block(workspace, codex_env, stub_api):
     assert "command_injection" in output["reason"]
 
 
-def test_multiple_patch_paths_and_added_content_only(workspace, codex_env):
+@pytest.mark.parametrize("response", [
+    "Exit code: 0\nWall time: 0 seconds\nOutput:\nSuccess. Updated the following files:\nA sample.py\n",
+    "Exit code: 0\nWall time: 0 seconds\nTotal output lines: 1000\nOutput:\nSuccess. Updated the following files:\nA sample.py\n…123 chars truncated…\nA last.py\n",
+])
+def test_multiple_patch_paths_and_added_content_only(workspace, codex_env, response):
     _, repo = workspace
     patch = """*** Begin Patch
 *** Add File: added.py
@@ -112,7 +116,7 @@ def test_multiple_patch_paths_and_added_content_only(workspace, codex_env):
 +safe = True
 *** End Patch
 """
-    rc, output, _ = invoke(patch_payload(repo, patch), codex_env)
+    rc, output, _ = invoke(patch_payload(repo, patch, response), codex_env)
     text = context(output)
     assert rc == 0
     assert "pickle" in text and "shell=True" in text and "yaml" in text
@@ -122,10 +126,13 @@ def test_multiple_patch_paths_and_added_content_only(workspace, codex_env):
     assert str(repo / "deleted.py") in state
     assert str(repo / "cleaned.py") in state
     assert "cleaned.py-command" not in state
-    assert invoke(patch_payload(repo, patch), codex_env)[:2] == (0, {})
+    assert invoke(patch_payload(repo, patch, response), codex_env)[:2] == (0, {})
 
 
-@pytest.mark.parametrize("response", ["Failed to find expected lines", "Error: patch failed", ""])
+@pytest.mark.parametrize("response", [
+    "Failed to find expected lines", "Error: patch failed", "",
+    "Exit code: 1\nWall time: 0 seconds\nOutput:\nSuccess. Updated the following files:\nA app.py\n",
+])
 def test_failed_patch_does_not_scan(workspace, codex_env, response):
     _, repo = workspace
     patch = "*** Begin Patch\n*** Add File: app.py\n+subprocess.call(user, shell=True)\n*** End Patch"

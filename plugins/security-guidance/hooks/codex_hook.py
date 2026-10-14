@@ -12,7 +12,10 @@ from typing import Any
 
 def patch_edits(payload: dict[str, Any]) -> list[dict[str, Any]]:
     response = payload.get("tool_response", "")
-    if not isinstance(response, str) or not response.startswith("Success."):
+    if not isinstance(response, str) or not response.startswith("Exit code: 0\n"):
+        return []
+    _, delimiter, output = response.partition("\nOutput:\n")
+    if not delimiter or not output.startswith("Success. Updated the following files:"):
         return []
     tool_input = payload.get("tool_input", {})
     patch = tool_input.get("command", "") if isinstance(tool_input, dict) else ""
